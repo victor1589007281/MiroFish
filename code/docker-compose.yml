@@ -1,0 +1,58 @@
+services:
+  go-backend:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - OPENCLAW_GATEWAY_URL=http://openclaw-gateway:18789
+      - OPENCLAW_API_KEY=${OPENCLAW_API_KEY}
+      - LLM_MODEL=dashscope:qwen-plus
+      - LLM_FLASH_MODEL=dashscope:qwen-flash
+      - LISTEN_ADDR=:8080
+    depends_on:
+      - neo4j
+      - redis
+      - postgres
+
+  openclaw-gateway:
+    image: openclaw/gateway:latest
+    ports:
+      - "18789:18789"
+    volumes:
+      - ./configs/openclaw.json:/app/openclaw.json
+    environment:
+      - BAILIAN_CODING_PLAN_KEY=${BAILIAN_CODING_PLAN_KEY}
+
+  neo4j:
+    image: neo4j:5-community
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/mirofish2026
+      - NEO4J_PLUGINS=["apoc"]
+    volumes:
+      - neo4j_data:/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=mirofish
+      - POSTGRES_USER=mirofish
+      - POSTGRES_PASSWORD=mirofish2026
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  neo4j_data:
+  redis_data:
+  pg_data:
